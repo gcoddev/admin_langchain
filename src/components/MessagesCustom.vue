@@ -19,7 +19,7 @@
 
 <script>
 export default {
-  name: "alert",
+  name: "alertMessages",
   props: {
     message: String,
     type: String,

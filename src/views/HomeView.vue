@@ -22,33 +22,39 @@
             <div class="row">
               <a href="#" class="card col-3">
                 <div class="card-body text-center">
-                  <i class="iconsminds-clock"></i>
-                  <p class="card-text mb-0">Pending Orders</p>
-                  <p class="lead text-center">16</p>
+                  <i class="simple-icon-user"></i>
+                  <p class="card-text mb-0">Usuarios</p>
+                  <p class="lead text-center">
+                    {{ Object.keys(users).length }}
+                  </p>
                 </div>
               </a>
 
               <a href="#" class="card col-3">
                 <div class="card-body text-center">
-                  <i class="iconsminds-basket-coins"></i>
-                  <p class="card-text mb-0">Completed Orders</p>
-                  <p class="lead text-center">32</p>
+                  <i class="simple-icon-docs"></i>
+                  <p class="card-text mb-0">Documentos</p>
+                  <p class="lead text-center">{{ Object.keys(docs).length }}</p>
                 </div>
               </a>
 
               <a href="#" class="card col-3">
                 <div class="card-body text-center">
-                  <i class="iconsminds-arrow-refresh"></i>
-                  <p class="card-text mb-0">Refund Requests</p>
-                  <p class="lead text-center">2</p>
+                  <i class="iconsminds-video"></i>
+                  <p class="card-text mb-0">Videos</p>
+                  <p class="lead text-center">
+                    {{ Object.keys(videos).length }}
+                  </p>
                 </div>
               </a>
 
               <a href="#" class="card col-3">
                 <div class="card-body text-center">
-                  <i class="iconsminds-mail-read"></i>
-                  <p class="card-text mb-0">New Comments</p>
-                  <p class="lead text-center">25</p>
+                  <i class="simple-icon-book-open"></i>
+                  <p class="card-text mb-0">Blogs</p>
+                  <p class="lead text-center">
+                    {{ Object.keys(blogs).length }}
+                  </p>
                 </div>
               </a>
             </div>
@@ -62,8 +68,72 @@
 <script>
 export default {
   name: "HomeView",
+  data() {
+    return {
+      users: [],
+      docs: [],
+      videos: [],
+      blogs: [],
+    };
+  },
+  methods: {
+    async getUsuarios() {
+      try {
+        const res = await this.axios.get("/api/usuarios");
+        res.data.forEach((el) => {
+          if (el.estado != "2") {
+            this.users.push(el);
+          }
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async getDocumentos() {
+      try {
+        const res = await this.axios.get("/api/documentosAll");
+        res.data.forEach((el) => {
+          if (el.estado != "2") {
+            this.docs.push(el);
+          }
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async getVideos() {
+      try {
+        const res = await this.axios.get("/api/videosAll");
+        res.data.forEach((el) => {
+          if (el.estado != "2") {
+            this.videos.push(el);
+          }
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async getBlogs() {
+      try {
+        const res = await this.axios.get("/api/blogsAll");
+        res.data.forEach((el) => {
+          if (el.estado != "2") {
+            this.blogs.push(el);
+          }
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  },
   created() {
     this.$store.commit("setMenu", ["admin", "home"]);
+    // this.$store.commit("setMenuList", "admin");
+
+    this.getUsuarios();
+    this.getDocumentos();
+    this.getVideos();
+    this.getBlogs();
   },
 };
 </script>

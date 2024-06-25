@@ -209,10 +209,10 @@ $.dore = function (element, options) {
       }
   
       /* Menu */
-      $(".landing-page .mobile-menu-button").on("click", function (event) {
-        event.preventDefault();
-        $(".landing-page").toggleClass("show-mobile-menu");
-      });
+      // $(".landing-page .mobile-menu-button").on("click", function (event) {
+      //   event.preventDefault();
+      //   $(".landing-page").toggleClass("show-mobile-menu");
+      // });
   
       $(".landing-page").on("click", function (event) {
         if (

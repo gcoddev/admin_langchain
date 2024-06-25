@@ -11,7 +11,7 @@
             <li class="breadcrumb-item">
               <a href="#">Contenido</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Nuevo</li>
+            <li class="breadcrumb-item active" aria-current="page">Editar</li>
           </ol>
         </nav>
         <div class="separator mb-5"></div>
@@ -22,7 +22,7 @@
       <div class="col-12">
         <div class="card mb-4">
           <div class="card-body">
-            <h5 class="mb-4">Crear nuevo documento</h5>
+            <h5 class="mb-4">Editar documento</h5>
 
             <form class="row" @submit.prevent="validateForm">
               <label class="form-group has-float-label col-6">
@@ -61,11 +61,11 @@
                 <span>Documento</span>
               </label>
 
-              <button class="btn btn-primary" type="submit">Agregar</button>
+              <button class="btn btn-primary" type="submit">Editar</button>
               <button class="btn btn-dark" type="reset" @click="reset()">
                 Reset
               </button>
-              <router-link to="/doc" class="btn btn-secondary">
+              <router-link to="/doc" class="btn btn-secondary" type="button">
                 Volver
               </router-link>
             </form>
@@ -77,24 +77,20 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
 export default {
-  name: "docnew",
+  name: "docedit",
   data() {
     return {
       titulo: "",
       descripcion: "",
       documento: "",
-      fecha: "",
+      documentoEdit: "",
       errores: {},
     };
   },
-  computed: {
-    ...mapState(["user"]),
-  },
   methods: {
     changePdf(event) {
-      this.documento = event.target.files[0];
+      this.documentoEdit = event.target.files[0];
     },
     validateForm() {
       this.errores = {};
@@ -108,40 +104,84 @@ export default {
       if (!this.documento) {
         this.errores.documento = "El documento es obligatorio.";
       }
-
+      if (this.documentoEdit) {
+        this.putDocumentoPdf();
+      }
       if (Object.keys(this.errores).length == 0) {
-        this.postDocumento();
+        this.putDocumento();
       }
     },
-    async postDocumento() {
+    async putDocumento() {
       const data = {
         titulo: this.titulo,
         descripcion: this.descripcion,
-        documento: this.documento,
       };
-      const id_user = localStorage.getItem("id_user");
       try {
-        const res = await this.axios.post("/api/documentos/" + id_user, data, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        const res = await this.axios.put(
+          "/api/documento/" + this.$store.state.doc_edit,
+          data
+        );
         this.$store.state.message = res.data.message;
         this.$store.state.type = "success";
+        this.$store.state.doc_edit = 0;
         this.$router.push("/doc");
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async putDocumentoPdf() {
+      const data = {
+        documento: this.documentoEdit,
+      };
+      try {
+        await this.axios.put(
+          "/api/documento/" + this.$store.state.doc_edit + "/" + this.documento,
+          data,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
       } catch (error) {
         console.log(error);
         if (error.response.status == 400) {
           this.errores = {};
-          this.errores.documento = error.response.data.message;
+          this.$store.state.message = error.response.data.message;
+          this.$store.state.type = "danger";
+          this.$store.state.doc_edit = 0;
         }
       }
     },
     reset() {
       this.titulo = "";
       this.descripcion = "";
-      this.documento = "";
+      this.documentoEdit = "";
     },
+    async getDocumento() {
+      try {
+        const res = await this.axios.get(
+          "/api/documento/" + this.$store.state.doc_edit
+        );
+        this.titulo = res.data.titulo;
+        this.descripcion = res.data.descripcion;
+        this.documento = res.data.documento;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  },
+  created() {
+    if (this.$store.state.doc_edit == 0) {
+      this.$router.push("/doc");
+    }
+    this.getDocumento();
+  },
+  mounted() {
+    if (this.$store.state.doc_edit == 0) {
+      this.$router.push("/doc");
+    }
+    this.getDocumento();
   },
 };
 </script>

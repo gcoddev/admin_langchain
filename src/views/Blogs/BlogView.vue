@@ -2,13 +2,13 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-12">
-        <h1>Usuario</h1>
+        <h1>Documentos</h1>
         <div class="text-zero top-right-button-container">
           <router-link
-            to="/usernew"
+            to="/blognew"
             class="btn btn-primary btn-lg top-right-button mr-1"
           >
-            Nuevo usuario
+            Nuevo blog
           </router-link>
         </div>
         <nav
@@ -19,7 +19,9 @@
             <li class="breadcrumb-item">
               <a href="#">Administracion</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Usuarios</li>
+            <li class="breadcrumb-item active" aria-current="page">
+              Documentos
+            </li>
           </ol>
         </nav>
         <div class="separator mb-5"></div>
@@ -34,35 +36,39 @@
       <div class="col-12 data-tables-ide-filter">
         <div class="card">
           <div class="card-body">
-            <table ref="table" class="display" id="table-users"></table>
+            <table ref="table" class="display" id="table-blogs"></table>
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
-
-<style>
+  
+  <style>
 @import "datatables.net-dt";
 </style>
-
-<script>
+  
+  <script>
 // import $ from "jquery";
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
 import messagesCustom from "@/components/MessagesCustom.vue";
+import { mapState } from "vuex";
 
 export default {
-  name: "HomeUser",
+  name: "blogsnew",
   data() {
     return {
-      users: [],
+      blogs: [],
       dataTableInstance: null,
     };
   },
   components: {
     DataTable,
     messagesCustom,
+  },
+  computed: {
+    ...mapState(["url_api", "user"]),
   },
   methods: {
     initDataTable() {
@@ -73,26 +79,25 @@ export default {
 
       const data = [];
       let i = 1;
-      this.users.forEach((element) => {
+      this.blogs.forEach((element) => {
         if (element.estado != "2") {
           data.push({
             num: i,
-            nombres: element.nombres,
-            paterno: element.paterno,
-            materno: element.materno,
-            ci: element.ci,
-            role: element.role.nombre,
-            celular: element.celular,
-            username: element.username,
+            titulo: element.titulo,
+            descripcion: element.descripcion,
+            contenido: element.contenido,
+            imagen: `<a href="${this.url_api}/imagenes/${element.imagen}" target="_blank">
+                <img src="${this.url_api}/imagenes/${element.imagen}" width="150" crossorigin='anonymous'>
+                </a>`,
             estado: `<button type="button" class="border-0 badge bg-${
               element.estado == 1 ? "success" : "danger"
-            } text-white" data-id="${element.id}" data-estado="${
+            } text-white" data-id="${element.id_blog}" data-estado="${
               element.estado
             }" data-accion="estado">${
               element.estado == 1 ? "Activo" : "Inactivo"
             }</button>`,
-            acciones: `<button type="button" data-accion="editar" data-id="${element.id}" class="btn btn-warning btn-sm">Editar</button>
-                      <button type="button" data-accion="eliminar" data-id="${element.id}" class="btn btn-danger btn-sm">Eliminar</button> `,
+            acciones: `<button type="button" data-accion="editar" data-id="${element.id_blog}" class="btn btn-warning btn-sm">Editar</button>
+                        <button type="button" data-accion="eliminar" data-id="${element.id_blog}" data-img="${element.imagen}" class="btn btn-danger btn-sm">Eliminar</button> `,
           });
           i++;
         }
@@ -102,13 +107,10 @@ export default {
         data: data,
         columns: [
           { data: "num", title: "#" },
-          { data: "nombres", title: "Nombres" },
-          { data: "paterno", title: "Paterno" },
-          { data: "materno", title: "Materno" },
-          { data: "ci", title: "CI" },
-          { data: "role", title: "Rol" },
-          { data: "celular", title: "Celular" },
-          { data: "username", title: "Usuario" },
+          { data: "titulo", title: "Titulo" },
+          { data: "descripcion", title: "Descripcion" },
+          { data: "contenido", title: "Contenido" },
+          { data: "imagen", title: "Imagen" },
           { data: "estado", title: "Estado" },
           { data: "acciones", title: "Acciones" },
         ],
@@ -128,21 +130,16 @@ export default {
         switch (accion) {
           case "estado":
             const estado = $(event.target).data("estado");
-            if (id != 1) {
-              this.cambiarEstado(id, estado);
-            } else {
-              this.$store.state.message =
-                "No se puede desactivar el administrador";
-              this.$store.state.type = "danger";
-            }
+            this.cambiarEstado(id, estado);
             break;
           case "editar":
-            this.$router.push("/useredit");
-            this.$store.state.user_edit = id;
+            this.$router.push("/blogedit");
+            this.$store.state.blog_edit = id;
             break;
           case "eliminar":
-            this.$store.state.user_edit = id;
-            this.deleteUser();
+            const img = $(event.target).data("img");
+            this.$store.state.blog_edit = id;
+            this.deleteBlog(img);
             break;
         }
       });
@@ -155,44 +152,49 @@ export default {
         } else {
           estado = "1";
         }
-        const res = await this.axios.post("/api/usuarioEstado/" + id, {
+        const res = await this.axios.post("/api/blogEstado/" + id, {
           estado: data,
         });
-        this.getUsersAll();
+        this.getBlogs();
         this.$store.state.message = res.data.message;
         this.$store.state.type = "success";
       } catch (error) {
         console.log(error);
       }
     },
-    async getUsersAll() {
+    async getBlogs() {
+      const id_user = localStorage.getItem("id_user");
       try {
-        const res = await this.axios.get("/api/usuarios");
-        this.users = res.data;
+        const res = await this.axios.get("/api/blogs/" + id_user);
+        this.blogs = res.data;
         this.initDataTable();
       } catch (error) {
         console.log(error);
       }
     },
-    async deleteUser() {
+    async deleteBlog(img) {
       try {
         const res = await this.axios.delete(
-          "/api/usuario/" + this.$store.state.user_edit
+          "/api/blog/" + this.$store.state.blog_edit + "/" + img
         );
-        this.getUsersAll();
+        this.getBlogs();
         this.$store.state.message = res.data.message;
         this.$store.state.type = "success";
-        this.$store.state.user_edit = 0;
+        this.$store.state.blog_edit = 0;
       } catch (error) {
         console.log(error);
       }
     },
   },
   created() {
-    this.$store.commit("setMenu", ["admin", "user", "admin"]);
+    this.$store.commit("setMenu", ["content", "blog", "content"]);
     DataTable.use(DataTablesCore);
-    this.getUsersAll();
+    this.getBlogs();
   },
-  mounted() {},
+  mounted() {
+    this.$store.commit("setMenu", ["content", "blog", "content"]);
+    DataTable.use(DataTablesCore);
+    this.getBlogs();
+  },
 };
 </script>

@@ -2,7 +2,7 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-12">
-        <h1>Documentos</h1>
+        <h1>Videos</h1>
         <nav
           class="breadcrumb-container d-none d-sm-block d-lg-inline-block"
           aria-label="breadcrumb"
@@ -22,10 +22,10 @@
       <div class="col-12">
         <div class="card mb-4">
           <div class="card-body">
-            <h5 class="mb-4">Crear nuevo documento</h5>
+            <h5 class="mb-4">Crear nuevo video</h5>
 
             <form class="row" @submit.prevent="validateForm">
-              <label class="form-group has-float-label col-6">
+              <label class="form-group has-float-label col-5">
                 <input class="form-control" name="titulo" v-model="titulo" />
                 <span v-if="errores.titulo" class="text-danger">
                   {{ errores.titulo }}
@@ -33,7 +33,15 @@
                 <span>Titulo</span>
               </label>
 
-              <label class="form-group has-float-label col-6">
+              <label class="form-group has-float-label col-7">
+                <input class="form-control" name="url" v-model="url" placeholder="https://www.youtube.com/watch?v=" />
+                <span v-if="errores.url" class="text-danger">
+                  {{ errores.url }}
+                </span>
+                <span>Enlace de video (youtube)</span>
+              </label>
+
+              <label class="form-group has-float-label col-12">
                 <input
                   class="form-control"
                   type="text"
@@ -44,21 +52,6 @@
                   {{ errores.descripcion }}
                 </span>
                 <span>Descripcion</span>
-              </label>
-
-              <label class="form-group has-float-label col-12">
-                <input
-                  class="form-control"
-                  type="file"
-                  name="documento"
-                  id="documento"
-                  @change="changePdf"
-                  accept="application/pdf"
-                />
-                <span v-if="errores.documento" class="text-danger">
-                  {{ errores.documento }}
-                </span>
-                <span>Documento</span>
               </label>
 
               <button class="btn btn-primary" type="submit">Agregar</button>
@@ -75,17 +68,16 @@
     </div>
   </div>
 </template>
-
-<script>
+  
+  <script>
 import { mapState } from "vuex";
 export default {
   name: "docnew",
   data() {
     return {
       titulo: "",
+      url: "",
       descripcion: "",
-      documento: "",
-      fecha: "",
       errores: {},
     };
   },
@@ -93,9 +85,6 @@ export default {
     ...mapState(["user"]),
   },
   methods: {
-    changePdf(event) {
-      this.documento = event.target.files[0];
-    },
     validateForm() {
       this.errores = {};
 
@@ -105,42 +94,36 @@ export default {
       if (!this.descripcion) {
         this.errores.descripcion = "La descripcion es obligatoria.";
       }
-      if (!this.documento) {
-        this.errores.documento = "El documento es obligatorio.";
+      if (!this.url) {
+        this.errores.url = "El enlace es obligatorio.";
+      } else if (!this.url.includes("watch?v=")) {
+        this.errores.url = "Debe ser un video de youtube.";
       }
 
       if (Object.keys(this.errores).length == 0) {
-        this.postDocumento();
+        this.postVideo();
       }
     },
-    async postDocumento() {
+    async postVideo() {
       const data = {
         titulo: this.titulo,
+        url: this.url,
         descripcion: this.descripcion,
-        documento: this.documento,
       };
       const id_user = localStorage.getItem("id_user");
       try {
-        const res = await this.axios.post("/api/documentos/" + id_user, data, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        const res = await this.axios.post("/api/videos/" + id_user, data);
         this.$store.state.message = res.data.message;
         this.$store.state.type = "success";
-        this.$router.push("/doc");
+        this.$router.push("/video");
       } catch (error) {
         console.log(error);
-        if (error.response.status == 400) {
-          this.errores = {};
-          this.errores.documento = error.response.data.message;
-        }
       }
     },
     reset() {
       this.titulo = "";
+      this.url = "";
       this.descripcion = "";
-      this.documento = "";
     },
   },
 };

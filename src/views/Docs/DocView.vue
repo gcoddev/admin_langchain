@@ -2,13 +2,13 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-12">
-        <h1>Usuario</h1>
+        <h1>Documentos</h1>
         <div class="text-zero top-right-button-container">
           <router-link
-            to="/usernew"
+            to="/docnew"
             class="btn btn-primary btn-lg top-right-button mr-1"
           >
-            Nuevo usuario
+            Nuevo documento
           </router-link>
         </div>
         <nav
@@ -19,7 +19,9 @@
             <li class="breadcrumb-item">
               <a href="#">Administracion</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Usuarios</li>
+            <li class="breadcrumb-item active" aria-current="page">
+              Documentos
+            </li>
           </ol>
         </nav>
         <div class="separator mb-5"></div>
@@ -34,7 +36,7 @@
       <div class="col-12 data-tables-ide-filter">
         <div class="card">
           <div class="card-body">
-            <table ref="table" class="display" id="table-users"></table>
+            <table ref="table" class="display" id="table-docs"></table>
           </div>
         </div>
       </div>
@@ -51,18 +53,22 @@
 import DataTable from "datatables.net-vue3";
 import DataTablesCore from "datatables.net";
 import messagesCustom from "@/components/MessagesCustom.vue";
+import { mapState } from "vuex";
 
 export default {
   name: "HomeUser",
   data() {
     return {
-      users: [],
+      docs: [],
       dataTableInstance: null,
     };
   },
   components: {
     DataTable,
     messagesCustom,
+  },
+  computed: {
+    ...mapState(["url_api", "user"]),
   },
   methods: {
     initDataTable() {
@@ -73,26 +79,22 @@ export default {
 
       const data = [];
       let i = 1;
-      this.users.forEach((element) => {
+      this.docs.forEach((element) => {
         if (element.estado != "2") {
           data.push({
             num: i,
-            nombres: element.nombres,
-            paterno: element.paterno,
-            materno: element.materno,
-            ci: element.ci,
-            role: element.role.nombre,
-            celular: element.celular,
-            username: element.username,
+            titulo: element.titulo,
+            descripcion: element.descripcion,
+            documento: `<a href="${this.url_api}/documentos/${element.documento}" target="_blank" class="btn btn-sm btn-dark">Ver documento</a>`,
             estado: `<button type="button" class="border-0 badge bg-${
               element.estado == 1 ? "success" : "danger"
-            } text-white" data-id="${element.id}" data-estado="${
+            } text-white" data-id="${element.id_doc}" data-estado="${
               element.estado
             }" data-accion="estado">${
               element.estado == 1 ? "Activo" : "Inactivo"
             }</button>`,
-            acciones: `<button type="button" data-accion="editar" data-id="${element.id}" class="btn btn-warning btn-sm">Editar</button>
-                      <button type="button" data-accion="eliminar" data-id="${element.id}" class="btn btn-danger btn-sm">Eliminar</button> `,
+            acciones: `<button type="button" data-accion="editar" data-id="${element.id_doc}" class="btn btn-warning btn-sm">Editar</button>
+                      <button type="button" data-accion="eliminar" data-id="${element.id_doc}" data-doc="${element.documento}" class="btn btn-danger btn-sm">Eliminar</button> `,
           });
           i++;
         }
@@ -102,13 +104,9 @@ export default {
         data: data,
         columns: [
           { data: "num", title: "#" },
-          { data: "nombres", title: "Nombres" },
-          { data: "paterno", title: "Paterno" },
-          { data: "materno", title: "Materno" },
-          { data: "ci", title: "CI" },
-          { data: "role", title: "Rol" },
-          { data: "celular", title: "Celular" },
-          { data: "username", title: "Usuario" },
+          { data: "titulo", title: "Titulo" },
+          { data: "descripcion", title: "Descripcion" },
+          { data: "documento", title: "Documento" },
           { data: "estado", title: "Estado" },
           { data: "acciones", title: "Acciones" },
         ],
@@ -128,21 +126,16 @@ export default {
         switch (accion) {
           case "estado":
             const estado = $(event.target).data("estado");
-            if (id != 1) {
-              this.cambiarEstado(id, estado);
-            } else {
-              this.$store.state.message =
-                "No se puede desactivar el administrador";
-              this.$store.state.type = "danger";
-            }
+            this.cambiarEstado(id, estado);
             break;
           case "editar":
-            this.$router.push("/useredit");
-            this.$store.state.user_edit = id;
+            this.$router.push("/docedit");
+            this.$store.state.doc_edit = id;
             break;
           case "eliminar":
-            this.$store.state.user_edit = id;
-            this.deleteUser();
+            const doc = $(event.target).data("doc");
+            this.$store.state.doc_edit = id;
+            this.deleteDocument(doc);
             break;
         }
       });
@@ -155,44 +148,49 @@ export default {
         } else {
           estado = "1";
         }
-        const res = await this.axios.post("/api/usuarioEstado/" + id, {
+        const res = await this.axios.post("/api/documentoEstado/" + id, {
           estado: data,
         });
-        this.getUsersAll();
+        this.getDocumentos();
         this.$store.state.message = res.data.message;
         this.$store.state.type = "success";
       } catch (error) {
         console.log(error);
       }
     },
-    async getUsersAll() {
+    async getDocumentos() {
+      const id_user = localStorage.getItem("id_user");
       try {
-        const res = await this.axios.get("/api/usuarios");
-        this.users = res.data;
+        const res = await this.axios.get("/api/documentos/" + id_user);
+        this.docs = res.data;
         this.initDataTable();
       } catch (error) {
         console.log(error);
       }
     },
-    async deleteUser() {
+    async deleteDocument(doc) {
       try {
         const res = await this.axios.delete(
-          "/api/usuario/" + this.$store.state.user_edit
+          "/api/documento/" + this.$store.state.doc_edit + "/" + doc
         );
-        this.getUsersAll();
+        this.getDocumentos();
         this.$store.state.message = res.data.message;
         this.$store.state.type = "success";
-        this.$store.state.user_edit = 0;
+        this.$store.state.doc_edit = 0;
       } catch (error) {
         console.log(error);
       }
     },
   },
   created() {
-    this.$store.commit("setMenu", ["admin", "user", "admin"]);
+    this.$store.commit("setMenu", ["content", "doc", "content"]);
     DataTable.use(DataTablesCore);
-    this.getUsersAll();
+    this.getDocumentos();
   },
-  mounted() {},
+  mounted() {
+    this.$store.commit("setMenu", ["content", "doc", "content"]);
+    DataTable.use(DataTablesCore);
+    this.getDocumentos();
+  },
 };
 </script>

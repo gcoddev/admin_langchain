@@ -2,7 +2,7 @@
   <header-custom />
   <sidebar-custom />
   <main>
-    <router-view></router-view>
+    <router-view :key="$route.fullPath"></router-view>
   </main>
   <footer-custom />
 </template>
@@ -17,6 +17,6 @@ export default {
     headerCustom,
     sidebarCustom,
     footerCustom,
-  }
+  },
 };
 </script>

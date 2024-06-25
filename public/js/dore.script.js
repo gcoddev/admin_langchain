@@ -599,20 +599,20 @@ $.dore = function (element, options) {
       container.addClass(nextClasses);
       resizeCarousel();
     }
-    $(".menu-button").on("click", function (event) {
-      event.preventDefault();
-      // event.stopPropagation();
-      setMenuClassNames(++menuClickCount);
-    });
+    // $(".menu-button").on("click", function (event) {
+    //   event.preventDefault();
+    //   // event.stopPropagation();
+    //   setMenuClassNames(++menuClickCount);
+    // });
 
-    $(".menu-button-mobile").on("click", function (event) {
-      event.preventDefault();
+    // $(".menu-button-mobile").on("click", function (event) {
+      // event.preventDefault();
       // event.stopPropagation();
-      $("#app-container")
-        .removeClass("sub-show-temporary")
-        .toggleClass("main-show-temporary");
-      return false;
-    });
+      // $("#app-container")
+      //   .removeClass("sub-show-temporary")
+      //   .toggleClass("main-show-temporary");
+      // return false;
+    // });
 
     $(".main-menu").on("click", "a", function (event) {
       event.preventDefault();
@@ -1238,7 +1238,7 @@ $.dore = function (element, options) {
             {
               ticks: {
                 beginAtZero: true,
-                suggestedMin:-1
+                suggestedMin: -1
               },
               display: false
             }
@@ -1382,7 +1382,7 @@ $.dore = function (element, options) {
                 pointHoverRadius: 2,
                 fill: false,
                 borderWidth: 2,
-                data: [200, 452, 0, -500, -100, 85, 20,0],
+                data: [200, 452, 0, -500, -100, 85, 20, 0],
                 datalabels: {
                   align: "end",
                   anchor: "end"

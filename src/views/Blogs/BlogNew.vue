@@ -2,7 +2,7 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-12">
-        <h1>Documentos</h1>
+        <h1>Blogs</h1>
         <nav
           class="breadcrumb-container d-none d-sm-block d-lg-inline-block"
           aria-label="breadcrumb"
@@ -22,7 +22,7 @@
       <div class="col-12">
         <div class="card mb-4">
           <div class="card-body">
-            <h5 class="mb-4">Crear nuevo documento</h5>
+            <h5 class="mb-4">Crear nuevo blog</h5>
 
             <form class="row" @submit.prevent="validateForm">
               <label class="form-group has-float-label col-6">
@@ -46,26 +46,39 @@
                 <span>Descripcion</span>
               </label>
 
-              <label class="form-group has-float-label col-12">
+              <label class="form-group has-float-label col-5">
                 <input
                   class="form-control"
                   type="file"
-                  name="documento"
-                  id="documento"
-                  @change="changePdf"
-                  accept="application/pdf"
+                  name="imagen"
+                  id="imagen"
+                  @change="changeImg"
+                  accept="image/jpeg,image/jpg,image/png,image/gif"
                 />
-                <span v-if="errores.documento" class="text-danger">
-                  {{ errores.documento }}
+                <span v-if="errores.imagen" class="text-danger">
+                  {{ errores.imagen }}
                 </span>
-                <span>Documento</span>
+                <span>Imagen del blog</span>
               </label>
+
+              <div class="form-group col-7">
+                <label for="contenido">Contenido</label>
+                <ckeditor
+                  id="contenido"
+                  :editor="editor"
+                  v-model="contenido"
+                  :config="editorConfig"
+                ></ckeditor>
+                <span v-if="errores.contenido" class="text-danger">
+                  {{ errores.contenido }}
+                </span>
+              </div>
 
               <button class="btn btn-primary" type="submit">Agregar</button>
               <button class="btn btn-dark" type="reset" @click="reset()">
                 Reset
               </button>
-              <router-link to="/doc" class="btn btn-secondary">
+              <router-link to="/blog" class="btn btn-secondary">
                 Volver
               </router-link>
             </form>
@@ -77,15 +90,20 @@
 </template>
 
 <script>
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { mapState } from "vuex";
 export default {
-  name: "docnew",
+  name: "blognew",
   data() {
     return {
       titulo: "",
       descripcion: "",
-      documento: "",
-      fecha: "",
+      imagen: "",
+      editor: ClassicEditor,
+      contenido: "",
+      editorConfig: {
+        language: "es",
+      },
       errores: {},
     };
   },
@@ -93,8 +111,8 @@ export default {
     ...mapState(["user"]),
   },
   methods: {
-    changePdf(event) {
-      this.documento = event.target.files[0];
+    changeImg(event) {
+      this.imagen = event.target.files[0];
     },
     validateForm() {
       this.errores = {};
@@ -105,30 +123,34 @@ export default {
       if (!this.descripcion) {
         this.errores.descripcion = "La descripcion es obligatoria.";
       }
-      if (!this.documento) {
-        this.errores.documento = "El documento es obligatorio.";
+      if (!this.imagen) {
+        this.errores.imagen = "La imagen es obligatoria.";
+      }
+      if (!this.contenido) {
+        this.errores.contenido = "El contenido es obligatorio.";
       }
 
       if (Object.keys(this.errores).length == 0) {
-        this.postDocumento();
+        this.postBlog();
       }
     },
-    async postDocumento() {
+    async postBlog() {
       const data = {
         titulo: this.titulo,
         descripcion: this.descripcion,
-        documento: this.documento,
+        imagen: this.imagen,
+        contenido: this.contenido,
       };
       const id_user = localStorage.getItem("id_user");
       try {
-        const res = await this.axios.post("/api/documentos/" + id_user, data, {
+        const res = await this.axios.post("/api/blogs/" + id_user, data, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         });
         this.$store.state.message = res.data.message;
         this.$store.state.type = "success";
-        this.$router.push("/doc");
+        this.$router.push("/blog");
       } catch (error) {
         console.log(error);
         if (error.response.status == 400) {
@@ -140,8 +162,15 @@ export default {
     reset() {
       this.titulo = "";
       this.descripcion = "";
-      this.documento = "";
+      this.imagen = "";
+      this.contenido = "";
     },
+  },
+  created() {
+    this.$store.commit("setMenu", ["content", "blog", "content"]);
+  },
+  mounted() {
+    this.$store.commit("setMenu", ["content", "blog", "content"]);
   },
 };
 </script>

@@ -567,7 +567,7 @@ export default {
     },
   },
   created() {
-    this.$store.commit("setMenu", ["content", "chat"]);
+    this.$store.commit("setMenu", ["content", "chat", "content"]);
   },
   mounted() {
     var scrollHeight = $("#chat-container")[0].scrollHeight;

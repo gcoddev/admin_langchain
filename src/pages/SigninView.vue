@@ -5,25 +5,22 @@
       <div class="row h-100">
         <div class="col-12 col-md-10 mx-auto my-auto">
           <div class="card auth-card">
-            <div class="position-relative image-side">
-              <p class="text-white h2">MAGIC IS IN THE DETAILS</p>
-
-              <p class="white mb-0">
-                Please use your credentials to login.
-                <br />If you are not a member, please
-                <a href="#" class="white">register</a>.
-              </p>
+            <div class="position-relative image-side d-none d-lg-block">
+              <img src="@/assets/upea.png" width="250" alt="" />
+              <div class="">
+                <a href="https://gcod.dev" target="_blank">Dev</a>
+              </div>
             </div>
             <div class="form-side">
-              <a href="Dashboard.Default.html">
-                <span class="logo-single"></span>
-              </a>
+              <router-link to="/" class="d-flex justify-content-center">
+                <img src="@/assets/banner.png" width="250" alt="" />
+              </router-link>
               <messages-custom
                 v-if="$store.state.message"
                 :type="$store.state.type"
                 :message="$store.state.message"
               />
-              <h6 class="mb-4">Iniciar sesion</h6>
+              <h3 class="my-4" style="font-weight: bold">Iniciar sesion</h3>
               <form @submit.prevent="login()">
                 <label class="form-group has-float-label mb-4">
                   <input type="text" class="form-control" v-model="username" />
@@ -77,14 +74,15 @@ export default {
       };
       try {
         const res = await this.axios.post("/api/login", data);
-        this.message = res.data.message;
-        this.type = "success";
+        this.$store.state.message = res.data.message;
+        this.$store.state.type = "success";
         this.$store.commit("setCookie", [
           "auth",
           res.data.token,
           res.data.expires,
         ]);
         localStorage.setItem("user", this.username);
+        localStorage.setItem("id_user", res.data.credencial);
         setTimeout(() => {
           this.$router.push("/");
           location.reload();
